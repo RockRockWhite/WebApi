@@ -1,5 +1,6 @@
 ﻿using WebApi.DtoParameters;
 using WebApi.Entities;
+using WebApi.Helpers;
 
 namespace WebApi.Services
 {
@@ -7,9 +8,8 @@ namespace WebApi.Services
     {
         void AddCompany(Company company);
         Task<Company> GetCompanyAsync(Guid companyId);
-        Task<IEnumerable<Company>> GetCompaniesAsync(CompanyDtoParameters parameters);
+        Task<PagedList<Company>> GetCompaniesAsync(CompanyDtoParameters parameters);
         Task<IEnumerable<Company>> GetCompaniesAsync(IEnumerable<Guid> companyIds);
-
         void UpdateCompany(Company company);
         void DeleteCompany(Company company);
         Task<bool> CompanyExistsAsync(Guid companyId);

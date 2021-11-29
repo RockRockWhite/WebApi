@@ -2,6 +2,7 @@
 using WebApi.Data;
 using WebApi.DtoParameters;
 using WebApi.Entities;
+using WebApi.Helpers;
 
 namespace WebApi.Services
 {
@@ -53,7 +54,7 @@ namespace WebApi.Services
             return await _context.Companies.FirstOrDefaultAsync(x => x.Id == companyId);
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
+        public async Task<PagedList<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
         {
             if (parameters == null)
             {
@@ -73,10 +74,7 @@ namespace WebApi.Services
                 queryExpression = queryExpression.Where(x => x.Name.Contains(parameters.SearchTerm));
             }
 
-            // 数据库级别的分页
-            queryExpression = queryExpression.Skip(parameters.Offset * parameters.Limit).Take(parameters.Limit);
-
-            return await queryExpression.ToListAsync();
+            return await PagedList<Company>.CreateAsync(queryExpression, parameters.Offset, parameters.Limit);
         }
 
         public async Task<IEnumerable<Company>> GetCompaniesAsync(IEnumerable<Guid> companyIds)
