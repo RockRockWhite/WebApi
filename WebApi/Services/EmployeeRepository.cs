@@ -65,16 +65,21 @@ namespace WebApi.Services
                 throw new ArgumentNullException(nameof(employee));
             }
 
-            employee.Id = Guid.NewGuid();
+            employee.Id = employee.Id == Guid.Empty ? Guid.NewGuid() : employee.Id;
             employee.CompanyId = companyId;
 
             _context.Employees.Add(employee);
         }
-
+        public void DeleteEmployee(Employee employee)
+        {
+            _context.Employees.Remove(employee);
+        }
         // 本方法与存储技术无关
         public void UpdateEmployee(Employee employee)
         {
             // _context.Entry(employee).State = EntityState.Modified;
         }
+
+
     }
 }

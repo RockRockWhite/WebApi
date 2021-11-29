@@ -54,6 +54,22 @@ namespace WebApi.Controllers
             return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, returnDto);
         }
 
+        [HttpDelete("{companyId}")]
+        public async Task<IActionResult> DeleteCompany(Guid companyId)
+        {
+            var entity = await _companyRepository.GetCompanyAsync(companyId);
+
+            if (entity is null)
+            {
+                return NotFound();
+            }
+
+            _companyRepository.DeleteCompany(entity);
+            await _companyRepository.SaveAsync();
+
+            return NoContent();
+        }
+
         [HttpOptions]
         public IActionResult GetCompaniesOptions()
         {

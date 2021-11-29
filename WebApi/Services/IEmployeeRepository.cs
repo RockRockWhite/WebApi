@@ -9,5 +9,6 @@ namespace WebApi.Services
         public Task<Employee> GetEmployeeAsync(Guid companyId, Guid employeeId);
         public void AddEmployee(Guid companyId, Employee employee);
         public void UpdateEmployee(Employee employee);
+        public void DeleteEmployee(Employee employee);
     }
 }

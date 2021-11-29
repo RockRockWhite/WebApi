@@ -1,5 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Options;
 using WebApi.Entities;
 using WebApi.Models;
 using WebApi.Services;
@@ -89,7 +93,17 @@ namespace WebApi.Controllers
             var employeeEntity = await _employeeRepository.GetEmployeeAsync(companyId, employeeId);
             if (employeeEntity == null)
             {
-                return NotFound();
+                // return NotFound();
+                // 改为新增资源
+                var employeeToAddEntity = _mapper.Map<Employee>(employee);
+                employeeToAddEntity.Id = employeeId;
+
+                _employeeRepository.AddEmployee(companyId, employeeToAddEntity);
+
+                await _companyRepository.SaveAsync();
+
+                var returnDto = _mapper.Map<EmployeeDto>(employeeToAddEntity);
+                return CreatedAtRoute(nameof(GetEmployee), new { companyId = companyId, employeeId = returnDto.Id }, returnDto);
             }
 
             // entity2updateDto
@@ -99,11 +113,91 @@ namespace WebApi.Controllers
             // Repository与数据库无关
             _employeeRepository.UpdateEmployee(employeeEntity);
 
-            var returnDto = _mapper.Map<EmployeeDto>(employeeEntity);
+            await _companyRepository.SaveAsync();
+
+            return NoContent();
+            //return Ok(returnDto);
+        }
+
+        [HttpPatch("{employeeId}")]
+        public async Task<IActionResult> PartiallyUpdateEmployeeForCompany(Guid companyId, Guid employeeId, JsonPatchDocument<EmployeeUpdateDto> patchDocument)
+        {
+            if (!await _companyRepository.CompanyExistsAsync(companyId))
+            {
+                return NotFound();
+            }
+
+            var employeeEntity = await _employeeRepository.GetEmployeeAsync(companyId, employeeId);
+            if (employeeEntity is null)
+            {
+                var employeeDto = new EmployeeUpdateDto();
+                // 需要处理验证错误
+                patchDocument.ApplyTo(employeeDto, ModelState);
+
+                if (!TryValidateModel(employeeDto))
+                {
+                    // 处理验证信息
+                    return ValidationProblem(ModelState);
+                }
+
+                var employeeToAdd = _mapper.Map<Employee>(employeeDto);
+                employeeToAdd.Id = employeeId;
+
+                _employeeRepository.AddEmployee(companyId, employeeToAdd);
+
+                await _companyRepository.SaveAsync();
+
+                var returnDto = _mapper.Map<EmployeeDto>(employeeToAdd);
+                return CreatedAtRoute(nameof(GetEmployee), new { companyId = companyId, employeeId = returnDto.Id }, returnDto);
+            }
+
+            var dtoToPatch = _mapper.Map<EmployeeUpdateDto>(employeeEntity);
+
+            // 需要处理验证错误
+            patchDocument.ApplyTo(dtoToPatch, ModelState);
+
+            if (!TryValidateModel(dtoToPatch))
+            {
+                // 处理验证信息
+                return ValidationProblem(ModelState);
+            }
+
+            _mapper.Map(dtoToPatch, employeeEntity);
+
+            _employeeRepository.UpdateEmployee(employeeEntity);
 
             await _companyRepository.SaveAsync();
-            //return NoContent();
-            return Ok(returnDto);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{employeeId}")]
+        public async Task<IActionResult> DeleteEmployee(Guid companyId, Guid employeeId)
+        {
+            if (!await _companyRepository.CompanyExistsAsync(companyId))
+            {
+                return NotFound();
+            }
+
+            var employeeEntity = await _employeeRepository.GetEmployeeAsync(companyId, employeeId);
+
+            if (employeeEntity is null)
+            {
+                return NotFound();
+            }
+
+            _employeeRepository.DeleteEmployee(employeeEntity);
+
+            await _companyRepository.SaveAsync();
+
+            return NoContent();
+        }
+
+        public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
+        {
+            var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
+
+            return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
         }
     }
 }

@@ -61,8 +61,6 @@ namespace WebApi.Services
             }
             var queryExpression = _context.Companies as IQueryable<Company>;
 
-
-
             if (!String.IsNullOrWhiteSpace(parameters.CompanyName))
             {
                 parameters.CompanyName.Trim();
@@ -74,6 +72,9 @@ namespace WebApi.Services
                 parameters.SearchTerm.Trim();
                 queryExpression = queryExpression.Where(x => x.Name.Contains(parameters.SearchTerm));
             }
+
+            // 数据库级别的分页
+            queryExpression = queryExpression.Skip(parameters.Offset * parameters.Limit).Take(parameters.Limit);
 
             return await queryExpression.ToListAsync();
         }
@@ -101,6 +102,8 @@ namespace WebApi.Services
             }
             return await _context.Companies.AnyAsync(x => x.Id == companyId);
         }
+
+
 
         public async Task<bool> SaveAsync()
         {

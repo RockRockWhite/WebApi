@@ -8,9 +8,10 @@ namespace WebApi.Profiles
     {
         public EmployeeProfile()
         {
-            CreateMap<Employee, EmployeeDto>().ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Name));
-            CreateMap<EmployeeAddDto, Employee>().ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FullName));
-            CreateMap<EmployeeUpdateDto, Employee>().ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.FullName));
+            CreateMap<Employee, EmployeeDto>().ForMember(dest => dest.FullName, act => act.MapFrom(src => src.Name));
+            CreateMap<EmployeeAddDto, Employee>().ForMember(dest => dest.Name, act => act.MapFrom(src => src.FullName));
+            CreateMap<EmployeeUpdateDto, Employee>().ForMember(dest => dest.Name, act => act.MapFrom(src => src.FullName));
+            CreateMap<Employee, EmployeeUpdateDto>().ForMember(dest => dest.FullName, act => act.MapFrom(src => src.Name));
         }
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Serialization;
 using WebApi.Data;
 using WebApi.Services;
 
@@ -14,7 +15,7 @@ builder.Services.AddControllers(option =>
 
     // option.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
     // option.OutputFormatters.Insert(0, new XmlDataContractSerializerOutputFormatter());
-}).AddXmlDataContractSerializerFormatters()
+})
 .ConfigureApiBehaviorOptions(setup =>
 {
     setup.InvalidModelStateResponseFactory = context =>
@@ -32,7 +33,7 @@ builder.Services.AddControllers(option =>
         return new UnprocessableEntityObjectResult(problemDetails) { ContentTypes = { "application/problem+json" } };
     };
 
-});
+}).AddNewtonsoftJson();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -75,7 +76,7 @@ using (var serviceScope = app.Services.CreateScope())
 {
     var context = serviceScope.ServiceProvider.GetRequiredService<RoutineDbContext>();
 
-    //context.Database.EnsureDeleted();
+    // context.Database.EnsureDeleted();
     context.Database.Migrate();
 }
 
