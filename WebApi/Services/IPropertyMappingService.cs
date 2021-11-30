@@ -1,6 +1,9 @@
-﻿namespace WebApi.Services
+﻿
+namespace WebApi.Services
 {
-    internal interface IPropertyMappingService
+    public interface IPropertyMappingService
     {
+        void AddMapping<TSource, TDestination>(Dictionary<string, PropertyMappingValue> mapping);
+        Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDsetination>();
     }
 }

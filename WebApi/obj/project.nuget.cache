@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "TvP9G0YgqMqUCM33ZzLzp/r6tRviexQ84BnClTINB6J20YpksWCpu5j5qD5bJNjIlBUdFZ56EgCFcZHsyKFfGw==",
+  "dgSpecHash": "xlEpn3QkkiONIiAu6qH/GmzdJ8EEX8LnCrVMiYlwlNRjS8OCr9PLIZXVOpDbf7Vai1LY5PJesCMphSvIOCP7PQ==",
   "success": true,
   "projectFilePath": "D:\\AspNet\\WebApi\\WebApi\\WebApi.csproj",
   "expectedPackageFiles": [
@@ -129,6 +129,7 @@
     "C:\\Users\\Rock\\.nuget\\packages\\system.io.filesystem.primitives\\4.3.0\\system.io.filesystem.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\Rock\\.nuget\\packages\\system.io.pipelines\\5.0.1\\system.io.pipelines.5.0.1.nupkg.sha512",
     "C:\\Users\\Rock\\.nuget\\packages\\system.linq\\4.3.0\\system.linq.4.3.0.nupkg.sha512",
+    "C:\\Users\\Rock\\.nuget\\packages\\system.linq.dynamic.core\\1.2.14\\system.linq.dynamic.core.1.2.14.nupkg.sha512",
     "C:\\Users\\Rock\\.nuget\\packages\\system.linq.expressions\\4.3.0\\system.linq.expressions.4.3.0.nupkg.sha512",
     "C:\\Users\\Rock\\.nuget\\packages\\system.memory\\4.5.4\\system.memory.4.5.4.nupkg.sha512",
     "C:\\Users\\Rock\\.nuget\\packages\\system.net.http\\4.3.0\\system.net.http.4.3.0.nupkg.sha512",

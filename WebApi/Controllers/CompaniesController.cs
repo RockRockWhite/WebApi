@@ -57,6 +57,7 @@ namespace WebApi.Controllers
 
             var companyDtos = _mapper.Map<IEnumerable<CompanyDto>>(companies);
 
+
             // return Ok(companyDtos);
             return Ok(companyDtos);
         }

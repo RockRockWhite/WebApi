@@ -45,6 +45,7 @@ builder.Services.AddDbContext<RoutineDbContext>(option =>
     option.UseMySql("Server=localhost;Database=routine;User=root;Password=white;", new MySqlServerVersion(new Version(8, 0, 26)));
 });
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddSingleton<IPropertyMappingService, PropertyMappingService>();
 
 var app = builder.Build();
 

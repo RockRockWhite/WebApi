@@ -3,16 +3,19 @@ using WebApi.Data;
 using WebApi.DtoParameters;
 using WebApi.Entities;
 using WebApi.Helpers;
+using WebApi.Models;
 
 namespace WebApi.Services
 {
     public class CompanyRepository : ICompanyRepository
     {
         private readonly RoutineDbContext _context;
+        private readonly IPropertyMappingService _propertyMappingService;
 
-        public CompanyRepository(RoutineDbContext context)
+        public CompanyRepository(RoutineDbContext context, IPropertyMappingService propertyMappingService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
         }
 
         public void AddCompany(Company company)
@@ -74,6 +77,10 @@ namespace WebApi.Services
                 queryExpression = queryExpression.Where(x => x.Name.Contains(parameters.SearchTerm));
             }
 
+            var mappingDictionary = _propertyMappingService.GetPropertyMapping<CompanyDto, Company>();
+
+            queryExpression = queryExpression.ApplySort(parameters.OrderBy, mappingDictionary);
+
             return await PagedList<Company>.CreateAsync(queryExpression, parameters.Offset, parameters.Limit);
         }
 
@@ -100,8 +107,6 @@ namespace WebApi.Services
             }
             return await _context.Companies.AnyAsync(x => x.Id == companyId);
         }
-
-
 
         public async Task<bool> SaveAsync()
         {

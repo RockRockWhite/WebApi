@@ -13,6 +13,8 @@
             get => _limit;
             set => _limit = (_limit > MaxPageSize) ? MaxPageSize : value;
         }
+
+        public string OrderBy { get; set; } = "Name";
     }
 
 }
