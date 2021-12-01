@@ -16,21 +16,46 @@ namespace WebApi.Services
 
             });
         }
-
         public void AddMapping<TSource, TDestination>(Dictionary<string, PropertyMappingValue> mapping)
         {
             _propertyMappings.Add(new PropertyMapping<TSource, TDestination>(mapping));
         }
-        public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDsetination>()
+
+        public bool ValidMappingExists<TSource, TDestination>(string fields)
         {
-            var matchingMapping = _propertyMappings.OfType<PropertyMapping<TSource, TDsetination>>();
+            var propertyMapping = GetPropertyMapping<TSource, TDestination>();
+
+            if (string.IsNullOrWhiteSpace(fields))
+            {
+                return true;
+            }
+
+            var fieldsAfterSplit = fields.Split(',');
+
+            foreach (var field in fieldsAfterSplit)
+            {
+                var trimmedFields = field.Trim();
+                var propertyName = trimmedFields.Replace(" desc", "");
+
+                if (!propertyMapping.ContainsKey(propertyName))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
+        {
+            var matchingMapping = _propertyMappings.OfType<PropertyMapping<TSource, TDestination>>();
 
             if (matchingMapping.Count() == 1)
             {
                 return matchingMapping.First().MappingDictionary;
             }
 
-            throw new Exception($"无法找到唯一的映射关系: {typeof(TSource)}->{typeof(TDsetination)}");
+            throw new Exception($"无法找到唯一的映射关系: {typeof(TSource)}->{typeof(TDestination)}");
         }
     }
 }

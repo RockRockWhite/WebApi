@@ -46,6 +46,7 @@ builder.Services.AddDbContext<RoutineDbContext>(option =>
 });
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddSingleton<IPropertyMappingService, PropertyMappingService>();
+builder.Services.AddSingleton<IPropertyCheckerService, PropertyCheckerService>();
 
 var app = builder.Build();
 

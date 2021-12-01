@@ -17,11 +17,15 @@ namespace WebApi.Controllers
 
         public readonly ICompanyRepository _companyRepository;
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
+        private readonly IPropertyCheckerService _propertyCheckerService;
 
-        public CompaniesController(ICompanyRepository companyRepository, IMapper mapper)
+        public CompaniesController(ICompanyRepository companyRepository, IMapper mapper, IPropertyMappingService propertyMappingService, IPropertyCheckerService propertyCheckerService)
         {
             _companyRepository = companyRepository ?? throw new ArgumentException(nameof(companyRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
+            _propertyCheckerService = propertyCheckerService;
         }
 
         [HttpGet("{companyId}", Name = nameof(GetCompany))]
@@ -36,6 +40,16 @@ namespace WebApi.Controllers
         public async Task<IActionResult> GetCompanyies([FromQuery] CompanyDtoParameters parameters)
         //public async Task<IActionResult> Companyies()
         {
+            if (!_propertyMappingService.ValidMappingExists<CompanyDto, Company>(parameters.OrderBy))
+            {
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<CompanyDto>(parameters.Fields))
+            {
+                return BadRequest();
+            }
+
             var companies = await _companyRepository.GetCompaniesAsync(parameters);
 
             var priviousPageLink = companies.HasProvious ? CreateCompaniesResourceUri(parameters, ResourceUriType.PreviousPage) : null;
@@ -59,7 +73,7 @@ namespace WebApi.Controllers
 
 
             // return Ok(companyDtos);
-            return Ok(companyDtos);
+            return Ok(companyDtos.ShapeData(parameters.Fields));
         }
 
         [HttpPost]
@@ -104,6 +118,7 @@ namespace WebApi.Controllers
                 case ResourceUriType.PreviousPage:
                     return Url.Link(nameof(GetCompanyies), new
                     {
+                        fields = parameters.Fields,
                         offset = parameters.Offset - 1,
                         limit = parameters.Limit,
                         companyName = parameters.CompanyName,
@@ -112,6 +127,7 @@ namespace WebApi.Controllers
                 case ResourceUriType.NextPage:
                     return Url.Link(nameof(GetCompanyies), new
                     {
+                        fields = parameters.Fields,
                         offset = parameters.Offset + 1,
                         limit = parameters.Limit,
                         companyName = parameters.CompanyName,
@@ -120,6 +136,7 @@ namespace WebApi.Controllers
                 default:
                     return Url.Link(nameof(GetCompanyies), new
                     {
+                        fields = parameters.Fields,
                         offset = parameters.Offset,
                         limit = parameters.Limit,
                         companyName = parameters.CompanyName,

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Compile Remove="Helpers\Class.cs" />
+    <Compile Remove="Services\IPropertyMappingValue.cs" />
   </ItemGroup>
 
   <ItemGroup>
