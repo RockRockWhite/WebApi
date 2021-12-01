@@ -29,10 +29,16 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{companyId}", Name = nameof(GetCompany))]
-        public async Task<IActionResult> GetCompany(Guid companyId)
+        public async Task<IActionResult> GetCompany(Guid companyId, string? fields)
         {
+            // TODO: 本来这里应该判断fields是否合法
+
             var company = await _companyRepository.GetCompanyAsync(companyId);
-            return company != null ? Ok(_mapper.Map<CompanyDto>(company)) : NotFound();
+
+            var shapedData = _mapper.Map<CompanyDto>(company).ShapeData(fields);
+            shapedData.TryAdd("links", CreateLinkForCompany(companyId, fields));
+
+            return company != null ? Ok(shapedData) : NotFound();
         }
 
         [HttpGet(Name = nameof(GetCompanyies))]
@@ -84,11 +90,13 @@ namespace WebApi.Controllers
             await _companyRepository.SaveAsync();
 
             var returnDto = _mapper.Map<CompanyDto>(entity);
+            var shapeDto = returnDto.ShapeData(null);
+            shapeDto.TryAdd("links", CreateLinkForCompany(returnDto.Id, null));
 
-            return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, returnDto);
+            return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, shapeDto);
         }
 
-        [HttpDelete("{companyId}")]
+        [HttpDelete("{companyId}", Name = nameof(DeleteCompany))]
         public async Task<IActionResult> DeleteCompany(Guid companyId)
         {
             var entity = await _companyRepository.GetCompanyAsync(companyId);
@@ -143,6 +151,19 @@ namespace WebApi.Controllers
                         searchTerm = parameters.SearchTerm
                     });
             }
+        }
+
+        private IEnumerable<LinkDto> CreateLinkForCompany(Guid companyId, string fields)
+        {
+            var links = new List<LinkDto>();
+
+            links.Add(new LinkDto(Url.Link(nameof(GetCompany), new { companyId, fields }), "self", "GET"));
+            links.Add(new LinkDto(Url.Link(nameof(DeleteCompany), new { companyId }), "delete_company", "DELETE"));
+
+            links.Add(new LinkDto(Url.Link(nameof(EmployeesController.CreateEmployee), new { companyId }), "create_employee_for_company", "POST"));
+            links.Add(new LinkDto(Url.Link(nameof(EmployeesController.GetEmployees), new { companyId }), "get_employees_for_company", "GET"));
+
+            return links;
         }
     }
 }

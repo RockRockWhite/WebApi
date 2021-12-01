@@ -27,7 +27,7 @@ namespace WebApi.Controllers
             _employeeRepository = employeeRepository ?? throw new ArgumentNullException(nameof(employeeRepository));
         }
 
-        [HttpGet]
+        [HttpGet(Name = nameof(GetEmployees))]
         public async Task<IActionResult> GetEmployees(Guid companyId, [FromQuery] String? name = null, String? q = null)
         {
             if (!await _companyRepository.CompanyExistsAsync(companyId))
@@ -63,7 +63,7 @@ namespace WebApi.Controllers
             return Ok(employeeDto);
         }
 
-        [HttpPost]
+        [HttpPost(Name = nameof(CreateEmployee))]
         public async Task<IActionResult> CreateEmployee(Guid companyId, EmployeeAddDto employee)
         {
             if (!await _companyRepository.CompanyExistsAsync(companyId))
