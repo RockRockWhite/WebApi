@@ -35,6 +35,13 @@ builder.Services.AddControllers(option =>
 
 }).AddNewtonsoftJson();
 
+builder.Services.Configure<MvcOptions>(config =>
+{
+    var newtonSoftJsonOutPutFormatter = config.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
+
+    newtonSoftJsonOutPutFormatter?.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

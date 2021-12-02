@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using System.Text.Json;
 using WebApi.DtoParameters;
 using WebApi.Entities;
@@ -28,15 +29,45 @@ namespace WebApi.Controllers
             _propertyCheckerService = propertyCheckerService;
         }
 
+        [Produces("application/json",
+            "application/vnd.rock.hateoas+json",
+            "application/vnd.rock.company.full.hateoas+json",
+            "application/vnd.rock.company.friendly.hateoas+json",
+            "application/vnd.rock.company.full+json",
+            "application/vnd.rock.company.friendly+json")]
         [HttpGet("{companyId}", Name = nameof(GetCompany))]
-        public async Task<IActionResult> GetCompany(Guid companyId, string? fields)
+        public async Task<IActionResult> GetCompany(Guid companyId, string? fields, [FromHeader(Name = "Accept")] string mediaType)
         {
             // TODO: 本来这里应该判断fields是否合法
+
+            if (!MediaTypeHeaderValue.TryParse(mediaType, out var mediaTypeValue))
+            {
+                return BadRequest();
+            }
 
             var company = await _companyRepository.GetCompanyAsync(companyId);
 
             var shapedData = _mapper.Map<CompanyDto>(company).ShapeData(fields);
-            shapedData.TryAdd("links", CreateLinkForCompany(companyId, fields));
+
+
+            var includeLinks = mediaTypeValue.SubTypeWithoutSuffix.EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+            if (includeLinks)
+            {
+                shapedData.TryAdd("links", CreateLinksForCompany(companyId, fields));
+            }
+
+            // 删除hateoas后缀
+            var primaryMediaType = mediaTypeValue.SubTypeWithoutSuffix.ToString().Replace(".hateoas", "", StringComparison.InvariantCultureIgnoreCase);
+
+            if (primaryMediaType == "vnd.rock.company.full")
+            {
+                shapedData.TryAdd("FullDto", "FOOBAR");
+            }
+
+            if (primaryMediaType == "vnd.rock.company.friendly")
+            {
+                shapedData.TryAdd("FriendlyDto", "FOOBAR");
+            }
 
             return company != null ? Ok(shapedData) : NotFound();
         }
@@ -58,17 +89,12 @@ namespace WebApi.Controllers
 
             var companies = await _companyRepository.GetCompaniesAsync(parameters);
 
-            var priviousPageLink = companies.HasProvious ? CreateCompaniesResourceUri(parameters, ResourceUriType.PreviousPage) : null;
-            var nextPageLink = companies.HasNext ? CreateCompaniesResourceUri(parameters, ResourceUriType.NextPage) : null;
-
             var paginationMatadata = new
             {
                 totalCount = companies.TotalCount,
                 limit = companies.Limit,
                 currentPage = companies.CurrentPage,
                 totalPage = companies.TotalPages,
-                priviousPageLink,
-                nextPageLink
             };
 
             // 转义不安全字符
@@ -76,13 +102,27 @@ namespace WebApi.Controllers
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMatadata, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
 
             var companyDtos = _mapper.Map<IEnumerable<CompanyDto>>(companies);
+            var shapedData = companyDtos.ShapeData(parameters.Fields);
 
+            var companiesWhiteLinks = shapedData.Select(c =>
+            {
+                var companyDict = c as IDictionary<string, object>;
+                companyDict.Add("Links", CreateLinksForCompany((Guid)companyDict["Id"], null));
+
+                return companyDict;
+            });
+
+            var linkedCollectionResource = new
+            {
+                Values = companiesWhiteLinks,
+                Links = CreateLinksForCompany(parameters, companies.HasProvious, companies.HasNext),
+            };
 
             // return Ok(companyDtos);
-            return Ok(companyDtos.ShapeData(parameters.Fields));
+            return Ok(linkedCollectionResource);
         }
 
-        [HttpPost]
+        [HttpPost(Name = nameof(CreateCompany))]
         public async Task<IActionResult> CreateCompany(CompanyAddDto company)
         {
             var entity = _mapper.Map<Company>(company);
@@ -91,7 +131,7 @@ namespace WebApi.Controllers
 
             var returnDto = _mapper.Map<CompanyDto>(entity);
             var shapeDto = returnDto.ShapeData(null);
-            shapeDto.TryAdd("links", CreateLinkForCompany(returnDto.Id, null));
+            shapeDto.TryAdd("links", CreateLinksForCompany(returnDto.Id, null));
 
             return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, shapeDto);
         }
@@ -153,7 +193,7 @@ namespace WebApi.Controllers
             }
         }
 
-        private IEnumerable<LinkDto> CreateLinkForCompany(Guid companyId, string fields)
+        private IEnumerable<LinkDto> CreateLinksForCompany(Guid companyId, string fields)
         {
             var links = new List<LinkDto>();
 
@@ -162,6 +202,25 @@ namespace WebApi.Controllers
 
             links.Add(new LinkDto(Url.Link(nameof(EmployeesController.CreateEmployee), new { companyId }), "create_employee_for_company", "POST"));
             links.Add(new LinkDto(Url.Link(nameof(EmployeesController.GetEmployees), new { companyId }), "get_employees_for_company", "GET"));
+
+            return links;
+        }
+
+        private IEnumerable<LinkDto> CreateLinksForCompany(CompanyDtoParameters parameters, bool hasPrivious, bool hasNext)
+        {
+            var links = new List<LinkDto>();
+
+            links.Add(new LinkDto(CreateCompaniesResourceUri(parameters, ResourceUriType.CurrentPage), "self", "GET"));
+
+            if (hasPrivious)
+            {
+                links.Add(new LinkDto(CreateCompaniesResourceUri(parameters, ResourceUriType.PreviousPage), "privious_page", "GET"));
+            }
+
+            if (hasNext)
+            {
+                links.Add(new LinkDto(CreateCompaniesResourceUri(parameters, ResourceUriType.NextPage), "next_page", "GET"));
+            }
 
             return links;
         }
