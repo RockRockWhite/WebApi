@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using System.Text.Json;
+using WebApi.ActionConstraints;
 using WebApi.DtoParameters;
 using WebApi.Entities;
 using WebApi.Helpers;
@@ -122,7 +123,25 @@ namespace WebApi.Controllers
             return Ok(linkedCollectionResource);
         }
 
+        [HttpPost(Name = nameof(CreateCompanyWithBankruptTime))]
+        [RequestHeaderMatchesMediaType("Content-Type", "application/vnd.rock.companyforcreationwithbankrupttime+json")]
+        [Consumes("application/vnd.rock.companyforcreationwithbankrupttime+json")]
+        public async Task<IActionResult> CreateCompanyWithBankruptTime(CompanyAddWithBankruptTimeDto company)
+        {
+            var entity = _mapper.Map<Company>(company);
+            _companyRepository.AddCompany(entity);
+            await _companyRepository.SaveAsync();
+
+            var returnDto = _mapper.Map<CompanyDto>(entity);
+            var shapeDto = returnDto.ShapeData(null);
+            shapeDto.TryAdd("links", CreateLinksForCompany(returnDto.Id, null));
+
+            return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, shapeDto);
+        }
+
         [HttpPost(Name = nameof(CreateCompany))]
+        [RequestHeaderMatchesMediaType("Content-Type", "application/json", "application/vnd.rock.companyforcreation+json")]
+        [Consumes("application/json", "application/vnd.rock.companyforcreation+json")]
         public async Task<IActionResult> CreateCompany(CompanyAddDto company)
         {
             var entity = _mapper.Map<Company>(company);
@@ -135,6 +154,8 @@ namespace WebApi.Controllers
 
             return CreatedAtRoute(nameof(GetCompany), new { companyId = returnDto.Id }, shapeDto);
         }
+
+
 
         [HttpDelete("{companyId}", Name = nameof(DeleteCompany))]
         public async Task<IActionResult> DeleteCompany(Guid companyId)
