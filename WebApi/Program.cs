@@ -9,9 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Ìí¼Ó»º´æÆ÷
+builder.Services.AddResponseCaching();
+
 builder.Services.AddControllers(option =>
 {
     option.ReturnHttpNotAcceptable = true;
+
+    option.CacheProfiles.Add("120sCacheProFile", new CacheProfile { Duration = 120 });
+
 
     // option.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
     // option.OutputFormatters.Insert(0, new XmlDataContractSerializerOutputFormatter());
@@ -74,6 +80,9 @@ else
         });
     });
 }
+
+// Ê¹ÓÃ»º´æÆ÷
+app.UseResponseCaching();
 
 app.UseHttpsRedirection();
 

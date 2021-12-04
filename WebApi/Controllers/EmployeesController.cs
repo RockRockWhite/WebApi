@@ -14,6 +14,7 @@ namespace WebApi.Controllers
 {
     [Route("api/companies/{companyId}/[controller]")]
     [ApiController]
+    [ResponseCache]
     public class EmployeesController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -43,6 +44,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{employeeId}", Name = nameof(GetEmployee))]
+        [ResponseCache(Duration = 60)]
         public async Task<IActionResult> GetEmployee(Guid companyId, Guid employeeId)
         {
             if (!await _companyRepository.CompanyExistsAsync(companyId))
