@@ -255,3 +255,4 @@ D:\AspNet\WebApi\WebApi\bin\Debug\net6.0\Microsoft.AspNetCore.JsonPatch.dll
 D:\AspNet\WebApi\WebApi\bin\Debug\net6.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 D:\AspNet\WebApi\WebApi\bin\Debug\net6.0\Newtonsoft.Json.Bson.dll
 D:\AspNet\WebApi\WebApi\bin\Debug\net6.0\System.Linq.Dynamic.Core.dll
+D:\AspNet\WebApi\WebApi\bin\Debug\net6.0\Marvin.Cache.Headers.dll

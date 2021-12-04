@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -14,7 +15,8 @@ namespace WebApi.Controllers
 {
     [Route("api/companies/{companyId}/[controller]")]
     [ApiController]
-    [ResponseCache]
+    [HttpCacheExpiration(CacheLocation = CacheLocation.Public)]
+    //[ResponseCache]
     public class EmployeesController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -44,7 +46,8 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{employeeId}", Name = nameof(GetEmployee))]
-        [ResponseCache(Duration = 60)]
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 180)]
+        [HttpCacheValidation(MustRevalidate = true)]
         public async Task<IActionResult> GetEmployee(Guid companyId, Guid employeeId)
         {
             if (!await _companyRepository.CompanyExistsAsync(companyId))

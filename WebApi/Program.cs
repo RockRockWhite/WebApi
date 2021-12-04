@@ -1,3 +1,4 @@
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,8 @@ builder.Services.AddControllers(option =>
 
     option.CacheProfiles.Add("120sCacheProFile", new CacheProfile { Duration = 120 });
 
-
-    // option.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
-    // option.OutputFormatters.Insert(0, new XmlDataContractSerializerOutputFormatter());
+    //option.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+    //option.OutputFormatters.Insert(0, new XmlDataContractSerializerOutputFormatter());
 })
 .ConfigureApiBehaviorOptions(setup =>
 {
@@ -48,6 +48,15 @@ builder.Services.Configure<MvcOptions>(config =>
     newtonSoftJsonOutPutFormatter?.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
 });
 
+// 添加ETag支持
+builder.Services.AddHttpCacheHeaders(expires =>
+{
+    expires.MaxAge = 60;
+    expires.CacheLocation = CacheLocation.Private;
+}, validation =>
+{
+    validation.MustRevalidate = true;
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -81,8 +90,11 @@ else
     });
 }
 
-// 使用缓存器
-app.UseResponseCaching();
+//// 使用缓存器 不支持Etag
+//app.UseResponseCaching();
+
+// 使用Etag
+app.UseHttpCacheHeaders();
 
 app.UseHttpsRedirection();
 
